@@ -67,10 +67,11 @@ This snakemake pipeline is designed for paired-end NGS DNA
     ```
 
 2.  Edit configuration files
+   
     change the path of fastq_dir, output_dir, reference_genome in "config.yaml"
 
 
-3.  Execute the workflow
+4.  Execute the workflow
 
     ```bash
     snakemake --configfile "config.yaml" --use-conda  --cores N
