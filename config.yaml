@@ -1,0 +1,9 @@
+# config.yaml
+# path to the fastq files
+fastq_dir: "/fml/ag-pallares_projects/NexDNAseq/data/23.12.11_Pilot"
+
+# path to results
+output_dir: "results"
+
+# path to reference genome
+reference_genome: "genome.fa"
