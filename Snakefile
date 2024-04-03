@@ -1,29 +1,46 @@
 import os
+import pandas as pd
+shell.executable("bash")
+
+from snakemake.utils import min_version
+
+
 configfile: "config.yaml"
 log_dir = config['output_dir'] + "/logs"
 working_dir = config['output_dir'] + "/working"
 ref_genome_name=os.path.basename(config['reference_genome'])
-SAMPLES=glob_wildcards(config['fastq_dir']+"/{sample}_R1_001.fastq.gz").sample
+sample_files = snakemake.utils.listfiles(config["fastq_dir"]+"/{sample}.fastq.gz")
+samples = dict((y[0], x) for x, y in sample_files)
 
+ALL_SAMPLES = glob_wildcards(config['fastq_dir']+"/{sample}.fastq.gz").sample
+PE_SAMPLES = glob_wildcards(config['fastq_dir']+"/{sample}_R1_001.fastq.gz").sample
+
+def get_paired_fastq(wildcards):  
+    paired_files = [samples[i] for i in samples.keys() if ("R1" in i or "R2" in i) and wildcards.sample in i]
+    if len(paired_files) == 2 :
+        return sorted(paired_files)
+    else:
+        raise ValueError(f"Error in matched pairs {wildcards.sample}")
+        
+
+    
 rule all:
     input:
         config['output_dir']+"/multiqc/multiqc.html"
         
 
+    
 
 rule fastqc:
     input:
-        R1= config['fastq_dir']+"/{sample}_R1_001.fastq.gz",
-        R2= config['fastq_dir']+"/{sample}_R2_001.fastq.gz"
+        config['fastq_dir']+"/{sample}.fastq.gz",
         
     output:
-        working_dir+"/fastqc/{sample}_R1_001_fastqc.zip",
-        working_dir+"/fastqc/{sample}_R2_001_fastqc.zip"
+        working_dir+"/fastqc/{sample}_fastqc.zip",
        
     log:
-        log1=log_dir+"/fastqc/{sample}_R1_001.log",
-        log2=log_dir+"/fastqc/{sample}_R2_001.log"
-      
+        log_dir+"/fastqc/{sample}.log",
+
     params:
         outdir=working_dir+"/fastqc"
         
@@ -34,28 +51,22 @@ rule fastqc:
       
     shell:
         "mkdir -p {params.outdir} &&"
-        "fastqc --threads {threads} {input.R1} --outdir {params.outdir} >{log.log1} 2>&1 &&"
-        "fastqc --threads {threads} {input.R2} --outdir {params.outdir} >{log.log2} 2>&1 "
+        "fastqc --threads {threads} {input} --outdir {params.outdir} >{log} 2>&1"
+
        
 
 rule trim:
     input:
-        R1=config['fastq_dir']+"/{sample}_R1_001.fastq.gz",
-        R2=config['fastq_dir']+"/{sample}_R2_001.fastq.gz"
-
-    output:
-        working_dir+"/trimmed/{sample}_R1_001_val_1.fq.gz",
-        working_dir+"/trimmed/{sample}_R2_001_val_2.fq.gz",
-        working_dir+"/trimmed/{sample}_R1_001.fastq.gz_trimming_report.txt",
-        working_dir+"/trimmed/{sample}_R2_001.fastq.gz_trimming_report.txt",
-        working_dir+"/trimmed/{sample}_R1_001_val_1_fastqc.zip",
-        working_dir+"/trimmed/{sample}_R2_001_val_2_fastqc.zip"
-        
-    log:
-       log_dir+"/trimmed/{sample}.log"
+        get_paired_fastq
        
+    output:
+        out_dir=working_dir+"/trimmed/{sample}",
+        R1=working_dir+"/trimmed/{sample}/{sample}_R1_001_val_1.fq.gz",
+        R2=working_dir+"/trimmed/{sample}/{sample}_R2_001_val_2.fq.gz",
+        log=log_dir+"/trimmed/{sample}.log"
+
     params:
-       outdir=working_dir+"/trimmed"
+        outdir=working_dir+"/trimmed/{sample}"
        
     threads: 32
     
@@ -64,8 +75,8 @@ rule trim:
        
     shell:
         "mkdir -p {params.outdir} &&"
-        "trim_galore --paired {input.R1} {input.R2} --fastqc --output_dir {params.outdir} --cores {threads} "
-        ">{log} 2>&1"
+        "trim_galore --paired {input} --fastqc --output_dir {params.outdir} --cores {threads} "
+        ">{output.log} 2>&1"
 
 
         
@@ -97,8 +108,8 @@ rule bwa_index:
 
 rule bwa:
     input:
-        R1=working_dir+"/trimmed/{sample}_R1_001_val_1.fq.gz",
-        R2=working_dir+"/trimmed/{sample}_R2_001_val_2.fq.gz",
+        R1=working_dir+"/trimmed/{sample}/{sample}_R1_001_val_1.fq.gz",
+        R2=working_dir+"/trimmed/{sample}/{sample}_R2_001_val_2.fq.gz",
         genome=working_dir+"/bwa_index/"+ref_genome_name
 
     output:
@@ -118,7 +129,6 @@ rule bwa:
 
     shell:
         "mkdir -p {params.outdir} &&"
-        #"bwa-mem2 index {input.genome}&& "
         "bwa-mem2 mem -M -t {threads} {input.genome} {input.R1} {input.R2} > {output.file} "
         "2>{log} && "
         "samtools stats {output.file} >{output.stats}"
@@ -167,37 +177,24 @@ rule picard:
 
     shell:
         "mkdir -p {params.outdir} &&"
-        "picard MarkDuplicates REMOVE_DUPLICATES=true I={input} O={output.file} M={output.metrics} CREATE_INDEX=true "
+        "picard MarkDuplicates REMOVE_DUPLICATES=true I={input} O={output.file} M={output.metrics} CREATE_INDEX=true"
         ">{log} 2>&1"
-    
    
+    
 rule multiqc:
     input: 
-        expand(working_dir+"/fastqc/{sample}_R1_001_fastqc.zip",
-               sample=SAMPLES),
-        expand(working_dir+"/fastqc/{sample}_R2_001_fastqc.zip",
-               sample=SAMPLES),
-               
-        expand(working_dir+"/trimmed/{sample}_R1_001_val_1_fastqc.zip",
-               sample=SAMPLES),
-        expand(working_dir+"/trimmed/{sample}_R2_001_val_2_fastqc.zip",
-               sample=SAMPLES),
-               
-        expand(working_dir+"/trimmed/{sample}_R1_001.fastq.gz_trimming_report.txt",
-               sample=SAMPLES),
-        expand(working_dir+"/trimmed/{sample}_R2_001.fastq.gz_trimming_report.txt",
-               sample=SAMPLES),
-               
+        expand(working_dir+"/fastqc/{sample}_fastqc.zip",
+               sample=ALL_SAMPLES),
+        expand(working_dir+"/trimmed/{sample}",
+               sample=PE_SAMPLES),
         expand(log_dir+"/trimmed/{sample}.log",
-               sample=SAMPLES),
-        expand(log_dir+"/trimmed/{sample}.log",
-               sample=SAMPLES),
-               
+               sample=PE_SAMPLES),
         expand(working_dir+"/bwa/{sample}.txt",
-               sample=SAMPLES),    
+               sample=PE_SAMPLES),    
         expand(working_dir+"/picard/{sample}_deduplicated.metrics.txt",
-               sample=SAMPLES),
-
+               sample=PE_SAMPLES),
+               
+       
      
     output:
         config['output_dir']+"/multiqc/multiqc.html"
@@ -215,6 +212,4 @@ rule multiqc:
         "mkdir -p {params.outdir} &&"
         "multiqc --config multiqc.yaml -o {params.outdir} -n multiqc.html {input} "
         ">{log} 2>&1"
-
-        
 
