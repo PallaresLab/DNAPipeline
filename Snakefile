@@ -1,5 +1,5 @@
 import os
-import pandas as pd
+#import pandas as pd
 shell.executable("bash")
 
 from snakemake.utils import min_version
@@ -60,7 +60,7 @@ rule trim:
         get_paired_fastq
        
     output:
-        out_dir=working_dir+"/trimmed/{sample}",
+        out_dir=directory(working_dir+"/trimmed/{sample}"),
         R1=working_dir+"/trimmed/{sample}/{sample}_R1_001_val_1.fq.gz",
         R2=working_dir+"/trimmed/{sample}/{sample}_R2_001_val_2.fq.gz",
         log=log_dir+"/trimmed/{sample}.log"
