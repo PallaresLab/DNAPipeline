@@ -1,5 +1,4 @@
 import os
-#import pandas as pd
 shell.executable("bash")
 
 from snakemake.utils import min_version
@@ -22,6 +21,7 @@ def get_paired_fastq(wildcards):
     else:
         raise ValueError(f"Error in matched pairs {wildcards.sample}")
         
+
 
     
 rule all:
@@ -129,7 +129,7 @@ rule bwa:
 
     shell:
         "mkdir -p {params.outdir} &&"
-        "bwa-mem2 mem -M -t {threads} {input.genome} {input.R1} {input.R2} > {output.file} "
+        "bwa-mem2 mem -M -t {threads} -R $(bash get_RG.sh {input.R1}) {input.genome} {input.R1} {input.R2} > {output.file} "
         "2>{log} && "
         "samtools stats {output.file} >{output.stats}"
 
