@@ -71,9 +71,12 @@ This snakemake pipeline is designed for paired-end NGS DNA
     change the path of fastq_dir, output_dir, reference_genome in "config.yaml"
 
 
-4.  Execute the workflow
+4.  Execute the workflow.
+   * The first time you are executing this snakemake pipeline it should run locally, once the first run is over (you can use --dry), you can switch to running it on the cluster.
 
     ```bash
     snakemake --configfile "config.yaml" --use-conda  --cores N
     ```
+
+
 
