@@ -30,11 +30,16 @@ This snakemake pipeline is designed for paired-end NGS DNA
 ## Setup environment
 
 1.  Install conda
-
-2.  Create a new enviroment
+2.  Clone workflow into working directory
 
     ```bash
-    conda create -n <project_name>
+    git clone <repo> <dir>
+    cd <dir>
+    ```
+3.  Create a new enviroment
+
+    ```bash
+    conda env create -n <project_name> --file environment.yaml
     ```
 
 3.  Activate the environment
@@ -58,22 +63,12 @@ This snakemake pipeline is designed for paired-end NGS DNA
     ```
 
 ## Run workflow
-
-1.  Clone workflow into working directory
-
-    ```bash
-    git clone <repo> <dir>
-    cd <dir>
-    ```
-
-2.  Edit configuration files
+1.  Edit configuration files
    
     change the path of fastq_dir, output_dir, reference_genome in "config.yaml"
-
-
-4.  Execute the workflow.
-   * The first time you are executing this snakemake pipeline it should run locally, once the first run is over (you can use --dry), you can switch to running it on the cluster.
-
+    
+2.  Execute the workflow.
+* The first time you are executing this snakemake pipeline it should run locally, once the first run is over (you can use --dry), you can switch to running it on the cluster.
     ```bash
     snakemake --configfile "config.yaml" --use-conda  --cores N
     ```
