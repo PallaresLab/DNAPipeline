@@ -2,7 +2,7 @@ import os
 shell.executable("bash")
 
 from snakemake.utils import min_version
-min_version("8.10.6")
+min_version("8.10.7")
 
 configfile: "config.yaml"
 log_dir = config['output_dir'] + "/logs"
