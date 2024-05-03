@@ -2,7 +2,7 @@ import os
 shell.executable("bash")
 
 from snakemake.utils import min_version
-min_version("8.10.7")
+min_version("8.10.6")
 
 configfile: "config.yaml"
 log_dir = config['output_dir'] + "/logs"
@@ -42,7 +42,8 @@ rule fastqc:
         log_dir+"/fastqc/{sample}.log",
 
     params:
-        outdir=working_dir+"/fastqc"
+        outdir=working_dir+"/fastqc",
+        rm_files=working_dir+"/fastqc/*_fastqc.html"
         
     threads: 32
        
@@ -51,7 +52,8 @@ rule fastqc:
       
     shell:
         "mkdir -p {params.outdir} &&"
-        "fastqc --threads {threads} {input} --outdir {params.outdir} >{log} 2>&1"
+        "fastqc --threads {threads} {input} --outdir {params.outdir} >{log} 2>&1 &&"
+        "rm {params.rm_files}"
 
        
 
@@ -66,7 +68,8 @@ rule trim:
         log=log_dir+"/trimmed/{sample}.log"
 
     params:
-        outdir=working_dir+"/trimmed/{sample}"
+        outdir=working_dir+"/trimmed/{sample}",
+        rm_files=working_dir+"/trimmed/{sample}/*_fastqc.html"
        
     threads: 32
     
@@ -74,9 +77,10 @@ rule trim:
         "envs/trim_galore.yml"
        
     shell:
-        "mkdir -p {params.outdir} &&"
+        "mkdir -p {params.outdir} && "
         "trim_galore --paired {input} --fastqc --output_dir {params.outdir} --cores {threads} "
-        ">{output.log} 2>&1"
+        ">{output.log} 2>&1 && "
+        "rm {params.rm_files}"
 
 
         
