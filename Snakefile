@@ -2,7 +2,7 @@ import os
 shell.executable("bash")
 
 from snakemake.utils import min_version
-min_version("8.10.7")
+min_version("8.10.6")
 
 configfile: "config.yaml"
 log_dir = config['output_dir'] + "/logs"
@@ -133,38 +133,16 @@ rule bwa:
 
     shell:
         "mkdir -p {params.outdir} &&"
-        "bwa-mem2 mem -M -t {threads} -R $(bash get_RG.sh {input.R1}) {input.genome} {input.R1} {input.R2} > {output.file} "
-        "2>{log} && "
+        "bwa-mem2 mem -M -t {threads} -R $(bash get_RG.sh {input.R1}) {input.genome} {input.R1} {input.R2} | samtools sort -@{threads} -o {output.file} "
+        ">{log} 2>&1 && "
         "samtools stats {output.file} >{output.stats}"
 
    
-rule samtools:
-    input:
-        working_dir+"/bwa/{sample}.bam",
 
-    output:
-        file=working_dir+"/samtools/{sample}.bam",
-        
-    log:
-        log_dir+"/samtools/{sample}.log"
-        
-    params:
-        outdir=working_dir+"/samtools"
-        
-    threads: 32
-        
-    conda:
-        "envs/samtools.yml"  
-
-    shell:
-        "mkdir -p {params.outdir} &&"
-        "samtools sort --threads {threads} -o {output.file} {input} "
-        ">{log} 2>&1"
-        
         
 rule picard:
     input:
-        working_dir+"/samtools/{sample}.bam",
+        working_dir+"/bwa/{sample}.bam",
 
     output:
         file=working_dir+"/picard/{sample}_deduplicated.bam",
