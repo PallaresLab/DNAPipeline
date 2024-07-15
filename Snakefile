@@ -133,7 +133,7 @@ rule bwa:
 
     shell:
         "mkdir -p {params.outdir} &&"
-        "bwa-mem2 mem -M -t {threads} -R $(bash get_RG.sh {input.R1}) {input.genome} {input.R1} {input.R2} | samtools sort -@{threads} -o {output.file} "
+        "bwa-mem2 mem -M -t {threads} -R $(bash get_RG.sh {input.R1}) {input.genome} {input.R1} {input.R2} | samtools sort -@{threads} | samtools view -b -F 256 -f 2 -o {output.file} "# keep only paired mapped reads
         ">{log} 2>&1 && "
         "samtools stats {output.file} >{output.stats}"
 

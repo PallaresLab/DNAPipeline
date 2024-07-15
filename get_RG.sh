@@ -1,17 +1,15 @@
 #!/bin/bash
 fq=$1
 header=$(zcat $fq | head -n 1 )
-name=${fq%%.*}
+name=$(echo $1 | cut -f1 -d"_")
 
 IFS=':' read -ra fields <<< "$header"
 
-instrument=$(echo "${fields[0]}" | sed 's/@//')
+id=$(echo "${fields[0]}" | sed 's/@//')
 run=${fields[1]}
 flowcell=${fields[2]}
 lane=${fields[3]}
 tile=${fields[4]}
 
-read_group_id="${flowcell}.${lane}"
-
-read_group="@RG\\tID:${read_group_id}\\tSM:${name}\\tLB:${instrument}\\tPL:Illumina"
+read_group="@RG\\tID:${id}\\tSM:${name}\\tLB:${name}\\tPL:Illumina"
 echo "$read_group"
