@@ -26,7 +26,8 @@ def get_paired_fastq(wildcards):
     
 rule all:
     input:
-        config['output_dir']+"/multiqc/multiqc.html"
+        config['output_dir']+"/multiqc/multiqc.html",
+        config['output_dir']+"/multiqc/QC_table.csv"
         
 
     
@@ -109,13 +110,12 @@ rule bwa_index:
         ">{log} 2>&1"
 
 
-
 rule bwa:
     input:
         R1=working_dir+"/trimmed/{sample}/{sample}_R1_001_val_1.fq.gz",
         R2=working_dir+"/trimmed/{sample}/{sample}_R2_001_val_2.fq.gz",
         genome=working_dir+"/bwa_index/"+ref_genome_name
-
+        
     output:
         file=working_dir+"/bwa/{sample}.bam",
         stats=working_dir+"/bwa/{sample}.txt"
@@ -132,12 +132,11 @@ rule bwa:
         "envs/bwa.yml"
 
     shell:
-        "mkdir -p {params.outdir} &&"
+        "mkdir -p {params.outdir} && "
         "bwa-mem2 mem -M -t {threads} -R $(bash get_RG.sh {input.R1}) {input.genome} {input.R1} {input.R2} | samtools sort -@{threads} | samtools view -b -F 256 -f 2 -o {output.file} "# keep only paired mapped reads
         ">{log} 2>&1 && "
         "samtools stats {output.file} >{output.stats}"
 
-   
 
         
 rule picard:
@@ -163,6 +162,7 @@ rule picard:
         ">{log} 2>&1"
    
     
+    
 rule multiqc:
     input: 
         expand(working_dir+"/fastqc/{sample}_fastqc.zip",
@@ -176,10 +176,10 @@ rule multiqc:
         expand(working_dir+"/picard/{sample}_deduplicated.metrics.txt",
                sample=PE_SAMPLES),
                
-       
-     
+          
     output:
-        config['output_dir']+"/multiqc/multiqc.html"
+        html=config['output_dir']+"/multiqc/multiqc.html",
+        folder=directory(config['output_dir']+"/multiqc/multiqc_data")
         
     log:
         log_dir+"/multiqc/multiqc.log"
@@ -191,7 +191,15 @@ rule multiqc:
         "envs/multiqc.yml"
         
     shell:
-        "mkdir -p {params.outdir} &&"
+        "mkdir -p {params.outdir} && "
         "multiqc --config multiqc.yaml -o {params.outdir} -n multiqc.html {input} "
         ">{log} 2>&1"
 
+
+rule QC_table:
+    input:
+        config['output_dir']+"/multiqc/multiqc_data"
+    output:
+        config['output_dir']+"/multiqc/QC_table.csv"
+    shell:
+        "python DNA_QCtable.py -m {input} -o {output} "
