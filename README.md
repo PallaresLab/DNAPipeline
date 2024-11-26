@@ -51,7 +51,6 @@ This snakemake pipeline is designed for paired-end NGS DNA
 4.  Enable the [Bioconda](https://bioconda.github.io/#using-bioconda) channel
 
     ```
-    conda config --add channels defaults
     conda config --add channels bioconda
     conda config --add channels conda-forge
     ```
