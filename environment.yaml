@@ -1,6 +1,5 @@
 channels:
     - conda-forge
     - bioconda
-    - defaults
 dependencies:
     - snakemake=8.10.7
