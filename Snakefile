@@ -37,14 +37,15 @@ rule fastqc:
         config['fastq_dir']+"/{sample}.fastq.gz",
         
     output:
-        working_dir+"/fastqc/{sample}_fastqc.zip",
+        zip = working_dir+"/fastqc/{sample}_fastqc.zip",
+        html = temp(working_dir+"/fastqc/*_fastqc.html")
        
     log:
-        log_dir+"/fastqc/{sample}.log",
+        log_dir + "/fastqc/{sample}.log",
 
     params:
-        outdir=working_dir+"/fastqc",
-        rm_files=working_dir+"/fastqc/*_fastqc.html"
+        outdir = working_dir+"/fastqc",
+    
         
     threads: 32
        
@@ -53,8 +54,7 @@ rule fastqc:
       
     shell:
         "mkdir -p {params.outdir} &&"
-        "fastqc --threads {threads} {input} --outdir {params.outdir} >{log} 2>&1 &&"
-        "rm {params.rm_files}"
+        "fastqc --threads {threads} {input} --outdir {params.outdir} >{log} 2>&1 "
 
        
 
@@ -63,14 +63,13 @@ rule trim:
         get_paired_fastq
        
     output:
-        out_dir=directory(working_dir+"/trimmed/{sample}"),
-        R1=working_dir+"/trimmed/{sample}/{sample}_R1_001_val_1.fq.gz",
-        R2=working_dir+"/trimmed/{sample}/{sample}_R2_001_val_2.fq.gz",
+        out_dir=temp(directory(working_dir+"/trimmed/{sample}")),
+        R1 = temp(working_dir+"/trimmed/{sample}/{sample}_R1_001_val_1.fq.gz"),
+        R2 = temp(working_dir+"/trimmed/{sample}/{sample}_R2_001_val_2.fq.gz"),
         log=log_dir+"/trimmed/{sample}.log"
 
     params:
         outdir=working_dir+"/trimmed/{sample}",
-        rm_files=working_dir+"/trimmed/{sample}/*_fastqc.html"
        
     threads: 32
     
@@ -80,8 +79,8 @@ rule trim:
     shell:
         "mkdir -p {params.outdir} && "
         "trim_galore --paired {input} --fastqc --output_dir {params.outdir} --cores {threads} "
-        ">{output.log} 2>&1 && "
-        "rm {params.rm_files}"
+        ">{output.log} 2>&1 "
+
 
 
         
@@ -112,8 +111,8 @@ rule bwa_index:
 
 rule bwa:
     input:
-        R1=working_dir+"/trimmed/{sample}/{sample}_R1_001_val_1.fq.gz",
-        R2=working_dir+"/trimmed/{sample}/{sample}_R2_001_val_2.fq.gz",
+        R1 = temp(working_dir+"/trimmed/{sample}/{sample}_R1_001_val_1.fq.gz"),
+        R2 = temp(working_dir+"/trimmed/{sample}/{sample}_R2_001_val_2.fq.gz"),
         genome=working_dir+"/bwa_index/"+ref_genome_name
         
     output:
