@@ -38,7 +38,7 @@ rule fastqc:
         
     output:
         zip = working_dir+"/fastqc/{sample}_fastqc.zip",
-        html = temp(working_dir+"/fastqc/*_fastqc.html")
+        html = temp(working_dir+"/fastqc/{sample}_fastqc.html")
        
     log:
         log_dir + "/fastqc/{sample}.log",
