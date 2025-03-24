@@ -15,7 +15,8 @@ ALL_SAMPLES = glob_wildcards(config['fastq_dir']+"/{sample}.fastq.gz").sample
 PE_SAMPLES = glob_wildcards(config['fastq_dir']+"/{sample}_R1_001.fastq.gz").sample
 
 def get_paired_fastq(wildcards):  
-    paired_files = [samples[i] for i in samples.keys() if ("R1" in i or "R2" in i) and wildcards.sample in i]
+    paired_files = [samples[i] for i in samples.keys()
+                if ("R1" in i or "R2" in i) and i.startswith(f"{wildcards.sample}_")]
     if len(paired_files) == 2 :
         return sorted(paired_files)
     else:
