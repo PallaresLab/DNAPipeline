@@ -112,13 +112,13 @@ rule bwa_index:
 
 rule bwa:
     input:
-        R1 = temp(working_dir+"/trimmed/{sample}/{sample}_R1_001_val_1.fq.gz"),
-        R2 = temp(working_dir+"/trimmed/{sample}/{sample}_R2_001_val_2.fq.gz"),
+        R1 = working_dir+"/trimmed/{sample}/{sample}_R1_001_val_1.fq.gz",
+        R2 = working_dir+"/trimmed/{sample}/{sample}_R2_001_val_2.fq.gz",
         genome=working_dir+"/bwa_index/"+ref_genome_name
         
     output:
-        file=working_dir+"/bwa/{sample}.bam",
-        stats=working_dir+"/bwa/{sample}.txt"
+        file = temp(working_dir+"/bwa/{sample}.bam"),
+        stats = working_dir+"/bwa/{sample}.txt"
         
     log:
         log_dir+"/bwa/{sample}.log"
