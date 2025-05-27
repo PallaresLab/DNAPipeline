@@ -80,7 +80,7 @@ This snakemake pipeline is designed for paired-end NGS DNA
     ```
     then
     ```bash
-    snakemake --use-conda --rerun-incomplete --jobs {cores}  --executor cluster-generic --cluster-generic-submit-cmd  "qsub -cwd -V -l h_vmem=50G -pe parallel {threads} -o logs/ -e logs/"
+    snakemake --use-conda --jobs {cores}  --executor cluster-generic --cluster-generic-submit-cmd  "qsub -cwd -V -l h_vmem=50G -pe parallel {threads} -o logs/ -e logs/"
     ```
 
 
