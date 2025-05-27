@@ -73,7 +73,8 @@ This snakemake pipeline is designed for paired-end NGS DNA
     ```
 
 3.  submit the jobs to SGE cluster to run the pipeline
-    downloa dsnakemake-executor-plugin-cluster-generic by pip
+   
+    download snakemake-executor-plugin-cluster-generic by pip
     ```bash
     pip install snakemake-executor-plugin-cluster-generic
     ```
