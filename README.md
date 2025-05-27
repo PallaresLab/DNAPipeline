@@ -72,5 +72,16 @@ This snakemake pipeline is designed for paired-end NGS DNA
     snakemake --configfile "config.yaml" --use-conda  --cores N
     ```
 
+3.  submit the jobs to SGE cluster to run the pipeline
+    downloa dsnakemake-executor-plugin-cluster-generic by pip
+    ```bash
+    pip install snakemake-executor-plugin-cluster-generic
+    ```
+    then
+    ```bash
+    snakemake --use-conda --rerun-incomplete --jobs {cores}  --executor cluster-generic --cluster-generic-submit-cmd  "qsub -cwd -V -l h_vmem=50G -pe parallel {threads} -o logs/ -e logs/"
+    ```
+
+
 
 
